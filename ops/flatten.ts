@@ -6,7 +6,7 @@ export function flatten<T>(): Operator<Stream<T>, T> {
       const outers = input$(cs);
       while (true) {
         const res = await outers.next();
-        if (res.done) return;
+        if (res.done) return res.value;
 
         const inners = res.value(cs);
         while (true) {

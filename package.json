@@ -5,9 +5,10 @@
     "name": "Tom Cumming",
     "email": "mail@tomcumming.co.uk"
   },
+  "main": "index.ts",
   "scripts": {
     "check": "tsc",
-    "format": "prettier --write package.json tsconfig.json src"
+    "format": "prettier --write ."
   },
   "devDependencies": {
     "prettier": "^2.2.1",

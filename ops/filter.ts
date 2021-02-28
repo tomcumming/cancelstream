@@ -8,7 +8,7 @@ export default function filter<T>(
       const x = input$(cs);
       while (true) {
         const res = await x.next();
-        if (res.done) return;
+        if (res.done) return res.value;
         else if (condition(res.value)) yield res.value;
       }
     };
