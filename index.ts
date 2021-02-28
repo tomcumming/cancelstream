@@ -1,12 +1,11 @@
 export { apply } from "./apply";
+import { CANCELLED, CancelSignal } from "./cancel";
 
-export const CANCELLED = Symbol("Cancelled");
+export { CANCELLED, CancelSignal };
+
 export const COMPLETED = Symbol("Completed");
 
 export type StreamResult = typeof CANCELLED | typeof COMPLETED;
-
-// This can't be a promise because typescript will flatten it
-export type CancelSignal = [Promise<typeof CANCELLED>];
 
 export type StreamBody<T> = AsyncIterator<T, StreamResult, unknown>;
 export type Stream<T> = (cs: CancelSignal) => StreamBody<T>;
