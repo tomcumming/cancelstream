@@ -71,3 +71,12 @@ export async function subscribe<T>(
     await forEach(res.value);
   }
 }
+
+export async function exhaustStreamBody(
+  streamBody: StreamBody<unknown>
+): Promise<StreamResult> {
+  while (true) {
+    const result = await streamBody.next();
+    if (result.done) return result.value;
+  }
+}

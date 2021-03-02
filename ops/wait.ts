@@ -1,6 +1,6 @@
 import { CANCELLED, CancelSignal, COMPLETED, Operator, Stream } from "..";
 
-/** Ignore completion and wait for cancellation */
+/** Delay completion and wait for cancellation */
 export default function wait<T>(): Operator<T, T> {
   return (input$: Stream<T>) => {
     return async function* (cs: CancelSignal) {
