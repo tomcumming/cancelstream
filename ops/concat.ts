@@ -1,6 +1,7 @@
 import { CancelSignal, Operator, Stream } from "..";
+import { CANCELLED } from "../cancel";
 
-export function flatten<T>(): Operator<Stream<T>, T> {
+export function concat<T>(): Operator<Stream<T>, T> {
   return (input$: Stream<Stream<T>>) => {
     return async function* (cs: CancelSignal) {
       const outers = input$(cs);
@@ -11,7 +12,10 @@ export function flatten<T>(): Operator<Stream<T>, T> {
         const inners = res.value(cs);
         while (true) {
           const res = await inners.next();
-          if (res.done) break;
+          if (res.done) {
+            if (res.value === CANCELLED) return CANCELLED;
+            else break;
+          }
           yield res.value;
         }
       }
