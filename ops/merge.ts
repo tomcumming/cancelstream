@@ -30,10 +30,7 @@ export function merge<T>(): Operator<Stream<T>, T> {
             StreamResult
           >;
           if (promiseResult.done) {
-            if (promiseResult.value === CANCELLED) {
-              // TODO exhaust all running?
-              return CANCELLED;
-            } else nextInput = COMPLETED;
+            nextInput = COMPLETED;
           } else {
             const nextIter = promiseResult.value(cs);
             running.push([nextIter.next(), nextIter]);
@@ -42,12 +39,7 @@ export function merge<T>(): Operator<Stream<T>, T> {
         } else {
           const promiseResult = firstTask as IteratorResult<T, StreamResult>;
           if (promiseResult.done) {
-            if (promiseResult.value === CANCELLED) {
-              // TODO exhaust all others?
-              return CANCELLED;
-            } else {
-              running.splice(firstIdx, 1);
-            }
+            running.splice(firstIdx, 1);
           } else {
             const nextPromise = running[firstIdx][1].next();
             running[firstIdx] = [nextPromise, running[firstIdx][1]];

@@ -8,14 +8,13 @@ export default function wait<T>(): Operator<T, T> {
       while (true) {
         const res = await iter.next();
         if (res.done) {
-          if (res.value === COMPLETED) break;
-          else return CANCELLED;
+          break;
         } else {
           yield res.value;
         }
       }
       await cs[0];
-      return CANCELLED;
+      return COMPLETED;
     };
   };
 }

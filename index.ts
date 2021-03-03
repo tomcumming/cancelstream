@@ -5,7 +5,7 @@ export { CANCELLED, CancelSignal };
 
 export const COMPLETED = Symbol("Completed");
 
-export type StreamResult = typeof CANCELLED | typeof COMPLETED;
+export type StreamResult = typeof COMPLETED;
 
 export type StreamBody<T> = AsyncIterator<T, StreamResult, unknown>;
 export type Stream<T> = (cs: CancelSignal) => StreamBody<T>;
@@ -18,7 +18,7 @@ export function fromAsyncIterable<T>(xs: AsyncIterable<T>): Stream<T> {
   return async function* ([cp]: CancelSignal) {
     for await (const x of xs) {
       const xOrCancelled = await Promise.race([cp, Promise.resolve(x)]);
-      if (xOrCancelled === CANCELLED) return CANCELLED;
+      if (xOrCancelled === CANCELLED) return COMPLETED;
       else yield xOrCancelled;
     }
     return COMPLETED;
@@ -29,7 +29,7 @@ export function fromIterable<T>(xs: Iterable<T>): Stream<T> {
   return async function* ([cp]: CancelSignal) {
     for (const x of xs) {
       const xOrCancelled = await Promise.race([cp, Promise.resolve(x)]);
-      if (xOrCancelled === CANCELLED) return CANCELLED;
+      if (xOrCancelled === CANCELLED) return COMPLETED;
       else yield xOrCancelled;
     }
     return COMPLETED;
