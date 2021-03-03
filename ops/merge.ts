@@ -22,7 +22,7 @@ export function merge<T>(): Operator<Stream<T>, T> {
 
         const indexedTasks: Promise<
           [number, unknown]
-        >[] = tasks.map((task, idx) => task.then((res) => [idx, task]));
+        >[] = tasks.map((task, idx) => task.then((task) => [idx, task]));
         const [firstIdx, firstTask] = await Promise.race(indexedTasks);
         if (firstIdx === running.length) {
           const promiseResult = firstTask as IteratorResult<

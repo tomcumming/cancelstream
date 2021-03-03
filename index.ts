@@ -59,6 +59,16 @@ export async function* into<T>(x$: Stream<T>) {
   }
 }
 
+export async function intoArray<T>(x$: Stream<T>, cs = NEVER_CANCEL) {
+  let items: T[] = [];
+  const iter = x$(cs);
+  while (true) {
+    const result = await iter.next();
+    if (result.done) return items;
+    else items.push(result.value);
+  }
+}
+
 export async function subscribe<T>(
   stream: Stream<T>,
   cs: CancelSignal,
