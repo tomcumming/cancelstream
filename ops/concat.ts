@@ -12,11 +12,8 @@ export function concat<T>(): Operator<Stream<T>, T> {
         const inners = res.value(cs);
         while (true) {
           const res = await inners.next();
-          if (res.done) {
-            if (res.value === CANCELLED) return CANCELLED;
-            else break;
-          }
-          yield res.value;
+          if (res.done) break;
+          else yield res.value;
         }
       }
     };
