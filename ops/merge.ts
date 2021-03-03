@@ -1,5 +1,5 @@
 import { COMPLETED, Operator, Stream, StreamBody, StreamResult } from "..";
-import { CANCELLED, CancelSignal } from "../cancel";
+import { CancelSignal } from "../cancel";
 
 export function merge<T>(): Operator<Stream<T>, T> {
   return function (input$: Stream<Stream<T>>): Stream<T> {

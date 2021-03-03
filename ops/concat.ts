@@ -1,5 +1,4 @@
 import { CancelSignal, Operator, Stream } from "..";
-import { CANCELLED } from "../cancel";
 
 export function concat<T>(): Operator<Stream<T>, T> {
   return (input$: Stream<Stream<T>>) => {

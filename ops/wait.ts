@@ -1,4 +1,4 @@
-import { CANCELLED, CancelSignal, COMPLETED, Operator, Stream } from "..";
+import { CancelSignal, COMPLETED, Operator, Stream } from "..";
 
 /** Delay completion and wait for cancellation */
 export default function wait<T>(): Operator<T, T> {
