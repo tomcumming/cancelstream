@@ -2,6 +2,7 @@ import * as Process from "process";
 
 import { simpleConcatTest } from "./ops/concat.test";
 import { simpleMergeTest } from "./ops/merge.test";
+import { simpleSwitchToTest } from "./ops/switchTo.test";
 
 async function runTest(
   name: string,
@@ -26,6 +27,7 @@ export async function runAll() {
   const results = Promise.all([
     await runTest(`Simple merge example`, simpleMergeTest),
     await runTest(`Simple concat example`, simpleConcatTest),
+    await runTest(`Simple switchTo example`, simpleSwitchToTest),
   ]);
 
   const success = (await results).every((result) => result);

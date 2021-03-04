@@ -8,7 +8,6 @@ export function cancelSignal(
 ): { cs: CancelSignal; cancel: () => void } {
   let cancel: () => void = undefined as any;
   const cp: CancelSignal[0] = new Promise((res) => {
-    console.log("setting");
     cancel = () => res(CANCELLED);
   });
   parent?.[0].then(cancel);
