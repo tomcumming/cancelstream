@@ -2,7 +2,7 @@ import * as Assert from "assert";
 
 import { intoArray, of } from "../..";
 import apply from "../../apply";
-import { concat } from "../../ops/concat";
+import concat from "../../ops/concat";
 
 export async function simpleConcatTest() {
   const first3 = [1, 2, 3];

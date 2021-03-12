@@ -2,7 +2,7 @@ import * as Assert from "assert";
 
 import { intoArray, of } from "../..";
 import apply from "../../apply";
-import { merge } from "../../ops/merge";
+import merge from "../../ops/merge";
 
 export async function simpleMergeTest() {
   const first3 = [1, 2, 3];

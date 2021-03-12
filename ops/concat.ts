@@ -1,6 +1,6 @@
 import { CancelSignal, Operator, Stream } from "..";
 
-export function concat<T>(): Operator<Stream<T>, T> {
+export default function concat<T>(): Operator<Stream<T>, T> {
   return (input$: Stream<Stream<T>>) => {
     return async function* (cs: CancelSignal) {
       const outers = input$(cs);

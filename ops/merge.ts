@@ -1,7 +1,7 @@
 import { COMPLETED, Operator, Stream, StreamBody, StreamResult } from "..";
 import { CancelSignal } from "../cancel";
 
-export function merge<T>(): Operator<Stream<T>, T> {
+export default function merge<T>(): Operator<Stream<T>, T> {
   return function (input$: Stream<Stream<T>>): Stream<T> {
     return async function* (cs: CancelSignal) {
       const inputIter = input$(cs);
