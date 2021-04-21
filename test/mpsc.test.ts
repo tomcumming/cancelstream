@@ -1,10 +1,11 @@
 import * as Assert from "assert";
-import { COMPLETED, exhaustStreamBody, CANCELLED } from "..";
+import { send } from "node:process";
+import { COMPLETED, exhaustStreamBody, CANCELLED, intoArray } from "..";
 
 import { cancelSignal } from "../cancel";
-import mpsc, { BUSY } from "../mpsc";
+import mpsc, { BUSY, SENT } from "../mpsc";
 
-export async function simpleMpscTest() {
+export async function testCancel() {
   const [sender, recv] = mpsc<number>();
 
   const cs = cancelSignal();
@@ -15,7 +16,7 @@ export async function simpleMpscTest() {
 
   // Recv is waiting, allow direct send
   const firstTask = recvBody.next();
-  Assert.strictEqual(sender.trySend(2), COMPLETED);
+  Assert.strictEqual(sender.trySend(2), SENT);
   Assert.deepStrictEqual(await firstTask, { value: 2, done: false });
 
   // Should be busy again
@@ -38,4 +39,14 @@ export async function simpleMpscTest() {
 
   // Report to sender that recv closed
   Assert.deepStrictEqual(await sender.send(7), CANCELLED);
+}
+
+export async function testComplete() {
+  const [sender, recv] = mpsc<number>();
+  const resultsTask = intoArray(recv);
+  for (const n of [1, 2, 3, 4, 5]) await sender.send(n);
+  await sender.complete();
+
+  const results = await resultsTask;
+  Assert.deepStrictEqual(results, [1, 2, 3, 4, 5]);
 }

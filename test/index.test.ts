@@ -3,7 +3,7 @@ import * as Process from "process";
 import { simpleConcatTest } from "./ops/concat.test";
 import { simpleMergeTest } from "./ops/merge.test";
 import { simpleSwitchToTest } from "./ops/switchTo.test";
-import { simpleMpscTest } from "./mpsc.test";
+import * as Mpsc from "./mpsc.test";
 
 async function runTest(
   name: string,
@@ -29,7 +29,8 @@ export async function runAll() {
     await runTest(`Simple merge example`, simpleMergeTest),
     await runTest(`Simple concat example`, simpleConcatTest),
     await runTest(`Simple switchTo example`, simpleSwitchToTest),
-    await runTest(`Simple Mpsc test`, simpleMpscTest),
+    await runTest(`MPSC cancel`, Mpsc.testCancel),
+    await runTest(`MPSC complete`, Mpsc.testComplete),
   ]);
 
   const success = (await results).every((result) => result);

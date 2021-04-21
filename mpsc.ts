@@ -1,89 +1,108 @@
+import { stat } from "node:fs";
 import { CANCELLED, CancelSignal, COMPLETED, Stream } from ".";
 
+export const SENT = Symbol("Mpsc sent");
 export const BUSY = Symbol("Mpsc busy");
 
-export type SendResult = typeof COMPLETED | typeof CANCELLED;
+export type SendResult = typeof SENT | typeof CANCELLED;
 
-const enum RecvState {
-  pre,
-  connected,
-  disconnected,
-}
+type State<T> = {
+  completed: boolean;
+  cancelled: boolean;
+  sendQueue: [T, (res: SendResult) => void][];
+  recvQueue?: (item: typeof COMPLETED | [T]) => void;
+  completeSignal?: () => void;
+};
 
-class State<T> {
-  recv = RecvState.pre;
-  queuedSenders: [T, (res: SendResult) => void][] = [];
-  queuedReceiver: undefined | ((item: T) => void);
+export interface Sender<T> {
+  trySend(item: T): typeof BUSY | SendResult;
+  send(item: T): Promise<SendResult>;
+  complete(): Promise<void>;
 }
 
 class SenderImpl<T> implements Sender<T> {
   constructor(private readonly state: State<T>) {}
 
   trySend(item: T): typeof BUSY | SendResult {
-    if (this.state.recv === RecvState.disconnected) return CANCELLED;
-    else if (
-      this.state.queuedSenders.length === 0 &&
-      this.state.queuedReceiver
-    ) {
-      const queuedReceiver = this.state.queuedReceiver;
-      this.state.queuedReceiver = undefined;
-      queuedReceiver(item);
-      return COMPLETED;
-    } else {
-      return BUSY;
+    if (this.state.completed) throw new Error(`Send after complete`);
+    if (this.state.cancelled) return CANCELLED;
+    if (this.state.sendQueue.length === 0 && this.state.recvQueue) {
+      const recvQueue = this.state.recvQueue;
+      this.state.recvQueue = undefined;
+      recvQueue([item]);
+      return SENT;
     }
+
+    return BUSY;
   }
 
   send(item: T): Promise<SendResult> {
     const tryResult = this.trySend(item);
-    if (tryResult === COMPLETED || tryResult === CANCELLED)
+    if (tryResult === SENT || tryResult === CANCELLED)
       return Promise.resolve(tryResult);
+    return new Promise((res) => this.state.sendQueue.push([item, res]));
+  }
 
-    return new Promise((res) => this.state.queuedSenders.push([item, res]));
+  complete(): Promise<void> {
+    if (this.state.completed) throw new Error(`Double completion`);
+
+    this.state.completed = true;
+
+    if (this.state.sendQueue.length === 0) {
+      const recvQueue = this.state.recvQueue;
+      this.state.recvQueue = undefined;
+      recvQueue?.(COMPLETED);
+      return Promise.resolve();
+    }
+
+    return new Promise((res) => (this.state.completeSignal = res));
   }
 }
 
 function receiver<T>(state: State<T>): Stream<T> {
   return async function* (cs: CancelSignal) {
-    state.recv = RecvState.connected;
-
     while (true) {
       while (true) {
-        const shifted = state.queuedSenders.shift();
-        if (shifted === undefined) break;
-        const [item, notify] = shifted;
-        notify(COMPLETED);
+        const firstSend = state.sendQueue.shift();
+        if (firstSend === undefined) break;
+        const [item, notify] = firstSend;
+        notify(SENT);
         yield item;
       }
 
-      const firstResult = await Promise.race([
+      if (state.completed) {
+        state.completeSignal?.();
+        return COMPLETED;
+      }
+
+      const firstTask = await Promise.race([
         cs[0],
-        new Promise<[T]>((res) => {
-          if (state.queuedReceiver || state.recv === RecvState.disconnected)
-            throw new Error(`Receiver used multiple times?`);
-          state.queuedReceiver = (item) => res([item]);
-        }),
+        new Promise<typeof COMPLETED | [T]>((res) => (state.recvQueue = res)),
       ]);
 
-      if (firstResult === CANCELLED) {
-        state.recv = RecvState.disconnected;
-        for (const [_item, notify] of state.queuedSenders) notify(CANCELLED);
+      if (firstTask === CANCELLED || firstTask === COMPLETED) {
+        state.cancelled = firstTask === CANCELLED;
+        for (const [item, notify] of state.sendQueue) {
+          notify(SENT);
+          yield item;
+        }
+        state.completeSignal?.();
         return COMPLETED;
       } else {
-        const [item] = firstResult;
+        const [item] = firstTask;
         yield item;
       }
     }
   };
 }
 
-export interface Sender<T> {
-  trySend(item: T): typeof BUSY | SendResult;
-  send(item: T): Promise<SendResult>;
-}
-
 /** Multiple producer single consumer queue */
 export default function mpsc<T>(): [Sender<T>, Stream<T>] {
-  const state = new State<T>();
+  const state: State<T> = {
+    completed: false,
+    cancelled: false,
+    sendQueue: [],
+  };
+
   return [new SenderImpl(state), receiver(state)];
 }
