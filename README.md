@@ -1,5 +1,12 @@
 # CancelStream - AsyncIterable with cancellation
 
+## Instructions
+
+1. Do not reuse `Stream`s.
+2. Remember to `exhaustStreamBody` after cancel.
+
+## Example
+
 ```javascript
 import { apply, from, into } from ".";
 import filter from "./ops/filter";
