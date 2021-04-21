@@ -1,4 +1,3 @@
-import { stat } from "node:fs";
 import { CANCELLED, CancelSignal, COMPLETED, Stream } from ".";
 
 export const SENT = Symbol("Mpsc sent");

@@ -1,6 +1,5 @@
 import * as Assert from "assert";
-import { send } from "node:process";
-import { COMPLETED, exhaustStreamBody, CANCELLED, intoArray } from "..";
+import { exhaustStreamBody, CANCELLED, intoArray } from "..";
 
 import { cancelSignal } from "../cancel";
 import mpsc, { BUSY, SENT } from "../mpsc";
