@@ -12,7 +12,7 @@ export type Stream<T> = (cs: CancelSignal) => StreamBody<T>;
 
 export type Operator<T, U> = (input$: Stream<T>) => Stream<U>;
 
-export const NEVER_CANCEL: CancelSignal = [new Promise(() => void 0)];
+export const NEVER_CANCEL: CancelSignal = [new Promise(() => {})];
 
 export function fromAsyncIterable<T>(xs: AsyncIterable<T>): Stream<T> {
   return async function* ([cp]: CancelSignal) {
