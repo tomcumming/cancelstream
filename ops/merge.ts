@@ -1,6 +1,6 @@
-import { COMPLETED, Operator, Stream, subscribe } from "..";
-import { CANCELLED, cancelSignal, CancelSignal, NEVER } from "../cancel";
-import queue, { SENT } from "../queue";
+import { COMPLETED, Operator, Stream } from "..";
+import { CANCELLED, cancelSignal } from "../cancel";
+import queue from "../queue";
 
 export default function merge<T>(): Operator<Stream<T>, T> {
   return function (input$: Stream<Stream<T>>): Stream<T> {
