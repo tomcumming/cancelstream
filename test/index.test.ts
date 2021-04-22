@@ -1,19 +1,20 @@
 import * as Process from "process";
 
-import { simpleConcatTest } from "./ops/concat.test";
-import { simpleMergeTest } from "./ops/merge.test";
-import { simpleSwitchToTest } from "./ops/switchTo.test";
-import * as Mpsc from "./mpsc.test";
-import { simpleSyncShareTest } from "./share.test";
+import simpleMapTest from "./ops/map.test";
+import * as Queue from "./queue.test";
 
 async function runTest(
   name: string,
-  test: () => Promise<unknown>
+  test: () => Promise<unknown>,
+  timeOut = 1_000
 ): Promise<boolean> {
   Process.stdout.write(`${name}... `);
 
   try {
-    await test();
+    await Promise.race([
+      test(),
+      new Promise((_res, rej) => setTimeout(() => rej("Timed out"), timeOut)),
+    ]);
   } catch (e) {
     Process.stdout.write(`FAIL\n`);
     console.error(e);
@@ -27,12 +28,9 @@ async function runTest(
 
 export async function runAll() {
   const results = Promise.all([
-    await runTest(`Simple merge example`, simpleMergeTest),
-    await runTest(`Simple concat example`, simpleConcatTest),
-    await runTest(`Simple switchTo example`, simpleSwitchToTest),
-    await runTest(`Simple MPSC cancel example`, Mpsc.testCancel),
-    await runTest(`Simple MPSC complete example`, Mpsc.testComplete),
-    await runTest(`Simple share sync example`, simpleSyncShareTest),
+    await runTest(`Simple map test`, simpleMapTest),
+    await runTest(`Simple queue cancel test`, Queue.testCancel),
+    await runTest(`Simple queue complete test`, Queue.testComplete),
   ]);
 
   const success = (await results).every((result) => result);

@@ -1,48 +1,58 @@
+import { ASAP, CANCELLED, CancelSignal, NEVER } from "./cancel";
+
+export { CANCELLED, CancelSignal } from "./cancel";
 export { apply } from "./apply";
-import { CANCELLED, CancelSignal } from "./cancel";
 
-export { CANCELLED, CancelSignal };
+export const COMPLETED = Symbol("Stream Completed");
 
-export const COMPLETED = Symbol("Completed");
+export type StreamResult<T> = typeof COMPLETED | [Stream<T>, T];
 
-export type StreamResult = typeof COMPLETED;
-
-export type StreamBody<T> = AsyncIterator<T, StreamResult, unknown>;
-export type Stream<T> = (cs: CancelSignal) => StreamBody<T>;
+export type Stream<T> = (cs: CancelSignal) => Promise<StreamResult<T>>;
 
 export type Operator<T, U> = (input$: Stream<T>) => Stream<U>;
 
-export const NEVER_CANCEL: CancelSignal = [new Promise(() => {})];
-
-export function fromAsyncIterable<T>(xs: AsyncIterable<T>): Stream<T> {
-  return async function* ([cp]: CancelSignal) {
-    for await (const x of xs) {
-      const xOrCancelled = await Promise.race([cp, Promise.resolve(x)]);
-      if (xOrCancelled === CANCELLED) return COMPLETED;
-      else yield xOrCancelled;
-    }
-    return COMPLETED;
-  };
+export async function subscribe<T>(
+  input$: Stream<T>,
+  cs: CancelSignal,
+  forEach: (item: T) => Promise<unknown>
+): Promise<typeof COMPLETED> {
+  while (true) {
+    const result = await input$(cs);
+    if (result === COMPLETED) return COMPLETED;
+    input$ = result[0];
+    await forEach(result[1]);
+  }
 }
 
-export function fromIterable<T>(xs: Iterable<T>): Stream<T> {
-  return async function* ([cp]: CancelSignal) {
-    for (const x of xs) {
-      const xOrCancelled = await Promise.race([cp, Promise.resolve(x)]);
-      if (xOrCancelled === CANCELLED) return COMPLETED;
-      else yield xOrCancelled;
-    }
-    return COMPLETED;
-  };
+export function fromIterable<T>(items: Iterable<T>): Stream<T> {
+  const iter = items[Symbol.iterator]();
+  const next = (cs: CancelSignal): Promise<StreamResult<T>> =>
+    Promise.race([cs, Promise.resolve(iter.next())]).then((taskResult) =>
+      taskResult === CANCELLED || taskResult.done
+        ? COMPLETED
+        : [next, taskResult.value]
+    );
+  return next;
 }
 
-export function from<T>(source: Iterable<T> | AsyncIterable<T>): Stream<T> {
-  if (Symbol.iterator in source) {
-    return fromIterable(source as Iterable<T>);
-  } else if (Symbol.asyncIterator in source) {
-    return fromAsyncIterable(source as AsyncIterable<T>);
+export function fromAsyncIterable<T>(items: AsyncIterable<T>): Stream<T> {
+  const iter = items[Symbol.asyncIterator]();
+  const next = (cs: CancelSignal): Promise<StreamResult<T>> =>
+    Promise.race([cs, iter.next()]).then((taskResult) =>
+      taskResult === CANCELLED || taskResult.done
+        ? COMPLETED
+        : [next, taskResult.value]
+    );
+  return next;
+}
+
+export function from<T>(items: Iterable<T> | AsyncIterable<T>): Stream<T> {
+  if (Symbol.iterator in items) {
+    return fromIterable(items as Iterable<T>);
+  } else if (Symbol.asyncIterator in items) {
+    return fromAsyncIterable(items as AsyncIterable<T>);
   } else {
-    throw new Error(`source was not (async)iterable`);
+    throw new Error(`source items were not (async)iterable`);
   }
 }
 
@@ -50,43 +60,24 @@ export function of<T>(...xs: T[]): Stream<T> {
   return fromIterable(xs);
 }
 
-export async function* into<T>(x$: Stream<T>) {
-  const iter = x$(NEVER_CANCEL);
+export async function* into<T>(input$: Stream<T>) {
   while (true) {
-    const res = await iter.next();
-    if (res.done) return;
-    yield res.value;
+    const result = await input$(NEVER);
+    if (result === COMPLETED) return;
+    input$ = result[0];
+    yield result[1];
   }
 }
 
-export async function intoArray<T>(x$: Stream<T>, cs = NEVER_CANCEL) {
-  let items: T[] = [];
-  const iter = x$(cs);
-  while (true) {
-    const result = await iter.next();
-    if (result.done) return items;
-    else items.push(result.value);
-  }
+export async function intoArray<T>(
+  input$: Stream<T>,
+  cs = NEVER
+): Promise<T[]> {
+  const items: T[] = [];
+  await subscribe(input$, cs, async (item) => items.push(item));
+  return items;
 }
 
-export async function subscribe<T>(
-  stream: Stream<T>,
-  cs: CancelSignal,
-  forEach: (t: T) => Promise<unknown>
-): Promise<StreamResult> {
-  const iter = stream(cs);
-  while (true) {
-    const res = await iter.next();
-    if (res.done) return res.value;
-    await forEach(res.value);
-  }
-}
-
-export async function exhaustStreamBody(
-  streamBody: StreamBody<unknown>
-): Promise<StreamResult> {
-  while (true) {
-    const result = await streamBody.next();
-    if (result.done) return result.value;
-  }
+export function finish<T>(input$: Stream<T>): Promise<T[]> {
+  return intoArray(input$, ASAP);
 }
