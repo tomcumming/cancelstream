@@ -2,6 +2,7 @@ import * as Process from "process";
 
 import simpleMapTest from "./ops/map.test";
 import simpleConcatTest from "./ops/concat.test";
+import simpleMergeTest from "./ops/merge.test";
 import * as Queue from "./queue.test";
 
 async function runTest(
@@ -31,6 +32,7 @@ export async function runAll() {
   const results = Promise.all([
     await runTest(`Simple map test`, simpleMapTest),
     await runTest(`Simple concat test`, simpleConcatTest),
+    await runTest(`Simple merge test`, simpleMergeTest),
     await runTest(`Simple queue cancel test`, Queue.testCancel),
     await runTest(`Simple queue complete test`, Queue.testComplete),
   ]);
