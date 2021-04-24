@@ -10,9 +10,9 @@
 ## Example
 
 ```javascript
-import { apply, from, into } from ".";
-import filter from "./ops/filter";
-import map from "./ops/map";
+import { apply, from, into } from "cancelstream";
+import filter from "cancelstream/ops/filter";
+import map from "cancelstream/ops/map";
 
 const numberAsyncGenerator = async function* () {
   for (const n of [1, 2, 3, 4, 5]) yield n;
