@@ -97,22 +97,22 @@ class Broker<T> {
   }
 }
 
-export function split<T>(input$: Stream<T>, count: 2): [Stream<T>, Stream<T>];
-export function split<T>(
+function split<T>(input$: Stream<T>, count: 2): [Stream<T>, Stream<T>];
+function split<T>(
   input$: Stream<T>,
   count: 3
 ): [Stream<T>, Stream<T>, Stream<T>];
-export function split<T>(
+function split<T>(
   input$: Stream<T>,
   count: 4
 ): [Stream<T>, Stream<T>, Stream<T>, Stream<T>];
-export function split<T>(
+function split<T>(
   input$: Stream<T>,
   count: 5
 ): [Stream<T>, Stream<T>, Stream<T>, Stream<T>, Stream<T>];
 
 /** Split a stream into many children, each is blocked by the slowest */
-export function split<T>(input$: Stream<T>, count: number): Stream<T>[] {
+function split<T>(input$: Stream<T>, count: number): Stream<T>[] {
   const children: Child<T>[] = [];
   while (count > 0) {
     children.push(new Child(count));
@@ -121,3 +121,5 @@ export function split<T>(input$: Stream<T>, count: number): Stream<T>[] {
   const broker = new Broker(input$, children);
   return children.map((c) => c.item$(broker));
 }
+
+export default split;

@@ -5,12 +5,12 @@ import apply from "../apply";
 import { NEVER, CANCELLED } from "../cancel";
 import merge from "../ops/merge";
 import queue, { BUSY } from "../queue";
-import { split } from "../split";
+import split from "../split";
 
 const NO_COMPLETED_MSG = "Did not expect completed";
 
 export async function testCancel() {
-  const [sender, input$] = queue();
+  const [sender, input$] = queue<number>();
   let [split1$, split2$, split3$] = split(input$, 3);
 
   // Must not eagerly pull
