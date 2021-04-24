@@ -45,4 +45,4 @@ for await (const n of into(oddSquare$)) {
 ## Functions
 
 - `queue` - A multiple producer single consumer channel.
-- `split` - Split a source `Stream` into *n* children, each blocked by the slowest.
+- `split` - Split a source `Stream` into _n_ children, each blocked by the slowest.
