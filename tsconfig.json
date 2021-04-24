@@ -5,7 +5,10 @@
     "strictFunctionTypes": true,
     "target": "ESNext",
     "module": "CommonJS",
-    "moduleResolution": "Node"
+    "moduleResolution": "Node",
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noUncheckedIndexedAccess": true
   },
   "include": ["."]
 }
