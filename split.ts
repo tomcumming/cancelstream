@@ -97,6 +97,20 @@ class Broker<T> {
   }
 }
 
+export function split<T>(input$: Stream<T>, count: 2): [Stream<T>, Stream<T>];
+export function split<T>(
+  input$: Stream<T>,
+  count: 3
+): [Stream<T>, Stream<T>, Stream<T>];
+export function split<T>(
+  input$: Stream<T>,
+  count: 4
+): [Stream<T>, Stream<T>, Stream<T>, Stream<T>];
+export function split<T>(
+  input$: Stream<T>,
+  count: 5
+): [Stream<T>, Stream<T>, Stream<T>, Stream<T>, Stream<T>];
+
 /** Split a stream into many children, each is blocked by the slowest */
 export function split<T>(input$: Stream<T>, count: number): Stream<T>[] {
   const children: Child<T>[] = [];
