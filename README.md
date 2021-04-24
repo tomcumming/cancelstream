@@ -33,3 +33,16 @@ for await (const n of into(oddSquare$)) {
   console.log(n);
 }
 ```
+
+## Operators
+
+- `map`
+- `filter`
+- `flatMap`
+- `concat`
+- `merge`
+
+## Functions
+
+- `queue` - A multiple producer single consumer channel.
+- `split` - Split a source `Stream` into *n* children, each blocked by the slowest.
