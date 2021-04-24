@@ -4,6 +4,7 @@ import simpleMapTest from "./ops/map.test";
 import simpleConcatTest from "./ops/concat.test";
 import simpleMergeTest from "./ops/merge.test";
 import * as Queue from "./queue.test";
+import * as Split from "./split.test";
 
 async function runTest(
   name: string,
@@ -14,8 +15,8 @@ async function runTest(
 
   try {
     await Promise.race([
-      test(),
       new Promise((_res, rej) => setTimeout(() => rej("Timed out"), timeOut)),
+      test(),
     ]);
   } catch (e) {
     Process.stdout.write(`FAIL\n`);
@@ -35,6 +36,8 @@ export async function runAll() {
     await runTest(`Simple merge test`, simpleMergeTest),
     await runTest(`Simple queue cancel test`, Queue.testCancel),
     await runTest(`Simple queue complete test`, Queue.testComplete),
+    await runTest(`Simple split cancel test`, Split.testCancel),
+    await runTest(`Simple split complete test`, Split.testCompleted),
   ]);
 
   const success = (await results).every((result) => result);
