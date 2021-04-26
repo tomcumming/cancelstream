@@ -35,6 +35,7 @@ export function fromIterable<T>(items: Iterable<T>): Stream<T> {
   return next;
 }
 
+/** Turn any `AsyncIterable` into a cancellation aware `Stream` */
 export function fromAsyncIterable<T>(items: AsyncIterable<T>): Stream<T> {
   const iter = items[Symbol.asyncIterator]();
   const next = (cs: CancelSignal): Promise<StreamResult<T>> =>
@@ -44,6 +45,22 @@ export function fromAsyncIterable<T>(items: AsyncIterable<T>): Stream<T> {
         : [next, taskResult.value]
     );
   return next;
+}
+
+// Need to Box cancel signal else it gets flattened by typescript
+export type GeneratorFn<T> = (
+  cs: CancelSignal
+) => AsyncGenerator<T, unknown, [CancelSignal]>;
+
+/** Like `fromAsyncIterable` but generator can control cancellation */
+export function fromGenerator<T>(genFn: GeneratorFn<T>): Stream<T> {
+  let iter: undefined | AsyncGenerator<T, unknown, [CancelSignal]>;
+  return async function loop(cs: CancelSignal): Promise<StreamResult<T>> {
+    if (!iter) iter = genFn(cs);
+    const result = await iter.next([cs]);
+    if (result.done) return COMPLETED;
+    else return [loop, result.value];
+  };
 }
 
 export function from<T>(items: Iterable<T> | AsyncIterable<T>): Stream<T> {
